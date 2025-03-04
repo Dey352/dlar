@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Academy Library Management System</title>
+    <link href="style.css" rel="stylesheet">
+
+</head>
+<body>
+    <!-- Login Page -->
+    
+    <div id="login-page" class="container">
+        <div class="header">
+            <img src="C:\figma boy\vslogo.png" alt="Vision Academy Logo">
+             <h1>Vision Academy Library Management</h1>  
+        </div>
+ 
+        <div class="login-container">
+            <form class="login-form" id="login-form">
+                <div class="role-selection">
+                    <label>
+                        <input type="radio" name="user-role" value="admin" required>
+                        <b>  Admin </b>
+                    </label>
+                    
+                    <label>
+                        <input type="radio" name="user-role" value="user" required>
+                      <b> User </b> 
+                    </label>
+                </div>
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="password" id="password" placeholder="Password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-modal" class="modal">
+        <div class="modal-content">
+            <h2>Confirm Logout</h2>
+            <p>Are you sure you want to log out?</p>
+            <div class="modal-buttons">
+                <button class="confirm" onclick="confirmLogout()">Yes, Logout</button>
+                <button class="cancel" onclick="cancelLogout()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" style="display:none;" class="container">
+        <div class="header">
+            <img src="vslogo.png" alt="Vision Academy Logo">
+            <h1>Library Dashboard</h1>
+        </div>
+        <div class="dashboard">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="user-info" id="user-info">
+                    <!-- User icon will be dynamically added here -->
+                </div>
+                <ul>
+                    <li><a href="#" onclick="showBookList()"><i class="fas fa-book"></i> Book List</a></li>
+                    <li id="add-book-menu" style="display:none;"><a href="#" onclick="showAddBook()"><i class="fas fa-plus-circle"></i> Add New Book</a></li>
+                    <li><a href="#" onclick="showLogoutConfirmation()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+
+            <!-- Main Content Area -->
+            <div id="main-content">
+                <!-- Book List Section -->
+                <div id="book-list-section" class="book-list">
+                    <h2>Book Inventory</h2>
+                    <table class="book-table">
+                        <thead>
+                            <tr>
+                                <th>Book ID</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Category</th>
+                                <th>Actions</th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody id="book-table-body">
+                            <!-- Books will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add Book Section -->
+                <div id="add-book-section" style="display:none;" class="add-book-form">
+                    <h2>Add New Book</h2>
+                    <form id="add-book-form">
+                        <input type="text" id="new-book-title" placeholder="Book Title" required>
+                        <input type="text" id="new-book-author" placeholder="Author" required>
+                        <select id="new-book-category" required>
+                            <option value="">Select Category</option>
+                            <option value="fiction">Fiction</option>
+                            <option value="non-fiction">Non-Fiction</option>
+                            <option value="reference">Nobele</option>
+                            <option value="academic">Academic</option>
+                        </select>
+                        <input type="number" id="new-book-quantity" placeholder="Quantity" required>
+                        <button type="submit">Add Book</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Credentials
+        const CREDENTIALS = {
+            admin: { username: 'admin', password: '1234' },
+            user: { username: 'user', password: '1234' }
+        };
+
+        // Books database (simulated)
+        let books = [
+            { id: 1, title: 'Introduction to Computer Science', author: 'John Smith', category: 'academic' },
+            { id: 2, title: 'Modern Web Development', author: 'Jane Doe', category: 'non-fiction' },
+            { id: 3, title: 'Machine Learning Basics', author: 'Alex Johnson', category: 'reference' }
+        ];
+
+        // Login Form Handler
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.querySelector('input[name="user-role"]:checked');
+
+            // Check if role is selected
+            if (!role) {
+                alert('Please select a user role.');
+                return;
+            }
+
+            // Validate credentials
+            if (username === CREDENTIALS[role.value].username && 
+                password === CREDENTIALS[role.value].password) {
+                
+                document.getElementById('login-page').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                
+                // Set user info and permissions
+                const userInfoElement = document.getElementById('user-info');
+                const addBookMenu = document.getElementById('add-book-menu');
+
+                if (role.value === 'admin') {
+                    userInfoElement.innerHTML = `<i class="fas fa-user-shield"></i> Admin User`;
+                    addBookMenu.style.display = 'block';
+                } else {
+                    userInfoElement.innerHTML = `<i class="fas fa-user"></i> Regular User`;
+                    addBookMenu.style.display = 'none';
+                }
+
+                renderBookList();
+            } else {
+                alert('Invalid credentials. Please try again.');
+            }
+        });
+
+        // Render Book List
+        function renderBookList() {
+            const tableBody = document.getElementById('book-table-body');
+            tableBody.innerHTML = '';
+            books.forEach(book => {
+                const row = `
+                    <tr>
+                        <td>${book.id}</td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td>${book.category}</td>
+                        <td>
+                            <button onclick="editBook(${book.id})">Edit</button>
+                            <button onclick="deleteBook(${book.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // Show Book List Section
+        function showBookList() {
+            document.getElementById('book-list-section').style.display = 'block';
+            document.getElementById('add-book-section').style.display = 'none';
+            renderBookList();
+        }
+
+        // Show Add Book Section
+        function showAddBook() {
+            document.getElementById('book-list-section').style.display = 'none';
+            document.getElementById('add-book-section').style.display = 'block';
+        }
+
+        // Show Logout Confirmation Modal
+        function showLogoutConfirmation() {
+            document.getElementById('logout-modal').style.display = 'block';
+        }
+
+        // Cancel Logout
+        function cancelLogout() {
+            document.getElementById('logout-modal').style.display = 'none';
+        }
+
+        // Confirm Logout
+        function confirmLogout() {
+            document.getElementById('logout-modal').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('login-form').reset();
+        }
+
+        // Add Book Function
+        document.getElementById('add-book-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-book-title').value;
+            const author = document.getElementById('new-book-author').value;
+            const category = document.getElementById('new-book-category').value;
+            const quantity = document.getElementById('new-book-quantity').value;
+
+            const newBook = {
+                id: books.length + 1,
+                title: title,
+                author: author,
+                category: category
+            };
+
+            books.push(newBook);
+            renderBookList();
+            showBookList();
+            this.reset();
+        });
+
+        // Edit Book (Placeholder)
+        function editBook(id) {
+            const bookToEdit = books.find(book => book.id === id);
+            if (bookToEdit) {
+                const newTitle = prompt('Enter new book title:', bookToEdit.title);
+                const newAuthor = prompt('Enter new author:', bookToEdit.author);
+                const newCategory = prompt('Enter new category:', bookToEdit.category);
+
+                if (newTitle && newAuthor && newCategory) {
+                    bookToEdit.title = newTitle;
+                    bookToEdit.author = newAuthor;
+                    bookToEdit.category = newCategory;
+                    renderBookList();
+                }
+            }
+        }
+
+        // Delete Book
+        function deleteBook(id) {
+            if (confirm('Are you sure you want to delete this book?')) {
+                books = books.filter(book => book.id !== id);
+                renderBookList();
+            }
+        }
+    </script>
+</body>
+</html>
